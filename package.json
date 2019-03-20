@@ -1,0 +1,35 @@
+{
+  "name": "@guld/http-server",
+  "version": "1.0.0-beta",
+  "description": "Handle read (GET) and write (POST) requests from guld peers.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node ./index.js ./test.js"
+  },
+  "author": "isysd",
+  "license": "MIT",
+  "dependencies": {
+    "asyncpify": "^4.0.3",
+    "body-parser": "^1.18.3",
+    "esm": "^3.0.84",
+    "etc-passwd": "^0.1.1",
+    "express": "^4.16.4",
+    "guld-fs": "^1.4.0",
+    "guld-random": "^0.3.9",
+    "guld-user": "^0.5.12",
+    "http-auth": "^3.2.3",
+    "js-git": "^0.7.8",
+    "keyring-gpg": "^0.4.0",
+    "node-file-logger": "^0.9.5",
+    "readline": "^1.3.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.9.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-node": "^8.0.0",
+    "eslint-plugin-promise": "^4.0.1",
+    "eslint-plugin-standard": "^4.0.0",
+    "rimraf": "^2.6.2"
+  }
+}
