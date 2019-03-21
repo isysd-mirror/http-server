@@ -6,6 +6,12 @@ TLDR; Handle read (GET) and write (POST) requests from guld peers.
 
 This package is a git via HTTP server that is meant to be run locally, and to cache the private and eventually public internets.
 
+Writes to this server are only accepted if hashed into the system git tree, and signed by a key trusted by the system administrator.
+
+Manage access using the GnuPG Web of Trust and standard linux practices like file and process permissions per user.
+
+Authenticate with peers running this server with unified, [OpenPGP](https://www.openpgp.org/) compliant, login and password management.
+
 ### Features
 
  + run individualized and security scoped workers for each active guld user on the node
@@ -53,6 +59,6 @@ After this, the browser should cache the session password until the node revokes
 
 ### Corporate Management Example
 
-Lets say you set up Acme-LTD branch for the hypothetical acme ltd company. The cap table for Acmt-LTD stock is transcribed into `/@acme-ltd/etc/fingerprint/` weighing each key to the number of voting shares that person has.
+Lets say you set up Acme-LTD branch for the hypothetical acme ltd company. The cap table for Acmt-LTD stock is transcribed into `/@acme-ltd/etc/fingerprint` weighing each key to the number of voting shares that person has.
 
 Then the acme branch will not be able to be written to unless a majority of voting shares have signed. Each commit would accumulate more signatures in it's `gpgsig` header until the critical number is reached, and the commit can be merged to the official acme-ltd branch.
