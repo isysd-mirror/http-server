@@ -8,14 +8,12 @@ const app = express()
 const { getName, getFullName, validate, exists, getHosts } = require('guld-user')
 var auth = require('http-auth')
 const nodefs = require('fs')
-git.plugins.set('fs', nodefs)
 const { getFS } = require('guld-fs')
 var url = require('url')
 const keyring = require('keyring-gpg')
 const { getRandStr } = require('guld-random')
 const log = require('node-file-logger')
 
-// const spawn = require('guld-spawn').nodeSpawn
 let fs
 let client
 let clientReady = false
@@ -161,12 +159,20 @@ app.get('*', async function (req, res) {
   }*/
 })
 
+const PGPSIGBEGIN = '-----BEGIN PGP SIGNATURE-----\n'
+const PGPSIGEND = '-----END PGP SIGNATURE-----\n'
+
 function parse_commit_chunk(commit) {
-  var sigstart = commit.indexOf('-----BEGIN PGP SIGNATURE-----')
-  var sigend = commit.indexOf('-----END PGP SIGNATURE-----')
-  var sig = commit.slice(sigstart, sigend + '-----END PGP SIGNATURE-----'.length).trim().replace('\n ', '\n')
-  var orig = (commit.slice(0, sigstart - 8) + '\n' + commit.slice(sigend + '-----END PGP SIGNATURE-----'.length + 1)).trimRight() + '\n'
-  return {sig: sig, orig: orig}
+  var resp = {}
+  commit = commit.replace(/^\n+|\n+$/, '').replace(/\r/g, '') + '\n'
+  resp.message = commit.slice(commit.indexOf(PGPSIGEND) + PGPSIGEND.length)
+  resp.headers = commit.slice(0, commit.indexOf('\ngpgsig'))
+  var sigstart = commit.indexOf(PGPSIGBEGIN)
+  var sigend = commit.indexOf(PGPSIGEND) + PGPSIGEND.length
+  resp.sig = commit.slice(sigstart, sigend).split('\n').map(x => x.replace(/^ /, '')).join('\n')
+  resp.orig = (resp.headers + '\n' + resp.message).replace(/^\n|\n$/, '') + '\n'
+  resp.commit = commit
+  return resp
 }
 
 async function parseFingerprints (user, defaultWeight=1) {
@@ -214,12 +220,18 @@ app.post(/.*\.git\/git-receive-pack/, (req, res) => {
       if (up.type === 'commit') {
         // found a commit! check for gpg signatures!
         var com = parse_commit_chunk(up.body.toString())
-        if (!com.sig || com.sig.length === 0) throw new Error(`Insufficient Signatures. Only ${votes} out of ${wsum}`)
-        votes = await keyring.verifyWeight(com.orig, com.sig, signers, weights)
-        process.stdout.write(`${votes} out of ${wsum}\n`)
-        if (votes * 10 < wsum * 5) throw new Error(`Insufficient Signatures. Only ${votes} out of ${wsum}`)
+        if (!com.sig || com.sig.length === 0) {
+          throw new Error(`No known signatures found.`)
+        }
+        votes = await keyring.verifyWeight(com.orig, com.sig, signers.slice(), weights.slice())
+        if (votes * 10 < wsum * 5) {
+          throw new Error(`Insufficient signatures. Only ${votes} out of ${wsum}`)
+        } else {
+          process.stdout.write(`${votes} out of ${wsum}\n`)
+        }
       }
     })).catch(e => {
+      log.Error(e.toString())
       res.status(403).send(e.toString()).end()
     }))) return
     res.set('Expires', 'Fri, 01 Jan 1980 00:00:00 GMT')
