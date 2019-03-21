@@ -20,7 +20,7 @@ This package is a git via HTTP server that is meant to be run locally, and to ca
 |-----------------|--------------|--------------------------------------|
 | `/etc/fingerprint` | `$OpenPGPFingerprint:$weight` | An OpenPGP and user weighting flat file. |
 | `/etc/htpasswd` | `$username:$sha512HashedSaltedPassword` | A normal [htpasswd](http://www.htaccesstools.com/articles/htpasswd/) file, mapping users to SHA512, salted hashes |
-| `/etc/nginx` | Nginx config files | Nginx or a similar http server is recommended, since this one spawns chlid processes listening on unix sockets. |
+| `/etc/nginx` | Nginx config files | Nginx or a similar http server is recommended, since this one spawns child processes listening on unix sockets. |
 | `/@$user` | Version controlled directory | The user's home directories use scoped namespaces (@name instead of /home/name). Users may have their own copies of all system files and more. |
 | `/var/log/guld/@$user` | log file directory | The user's worker logs activites here. |
 
@@ -42,14 +42,14 @@ It has a basic TTY command prompt for restarting workers and cleaning up.
 
 This server allows full read and write capabilities over the web, including a natural login experience.
 
-When a user wishes to authenticate with a peer, they go through the following steps:
+When a user wishes to authenticate with a peer, the client goes through the following steps:
 
 1. Unlock PGP key
 2. (background) Either use cached htpasswd or register a new one with the node
 3. (background) Send Basic Auth request with username and htpasswd result
 4. redirect user to "logged in" section if #3 passes
 
-Weights are in an /etc/fingerprint file with each line having the format $fingerprint:$weight.
+After this, the browser should cache the session password until the node revokes it, or a new is registered (step 2). This cache is typically cleared on browser restart.
 
 ### Corporate Management Example
 
